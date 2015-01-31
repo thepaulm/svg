@@ -109,7 +109,8 @@ class Division(object):
     def draw(self, dr, x):
 
         dr.set_color(self.color)
-        dr.text(self.name, x, doc_height, bold=True, pix=18)
+        dr.text(self.name, x - Milestone.named_radius / 2,
+                doc_height - doc_margin, bold=True, pix=18)
 
         last_ms = None
         for ms in self.mss:
@@ -178,7 +179,7 @@ class Milestone(object):
         sw = self.stroke_width()
         dr.circle(self.x, self.y, r, sw)
         if self.name:
-            dr.text(self.name, self.textx(), self.bottom())
+            dr.text(self.name, self.textx(), self.y + self.radius() / 2)
 
     def connect(self, other, dr):
         if other:
@@ -216,7 +217,7 @@ def main():
         divs.append(div)
 
         y = 50
-        div.add_milestone(Milestone(doc_height - Milestone.named_radius))
+        div.add_milestone(Milestone(doc_height - Milestone.named_radius - doc_margin))
         for k in division["Milestones"]:
             div.add_milestone(Milestone(doc_height - y, k, division["Milestones"][k]))
             y += 50
