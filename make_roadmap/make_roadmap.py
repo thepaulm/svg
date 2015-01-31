@@ -2,11 +2,26 @@
 
 import sys
 import json
+import re
+import string
 
 doc_height = 400
 doc_margin = 20
 start_x = 50
 conf_file = 'roadmap.json'
+
+months = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
+          'august', 'september', 'october', 'november', 'december']
+
+def mno_from_mo(mo):
+    if not mo:
+        return None
+    mo = string.split(mo)[0]
+    z = re.compile('^%s' % mo, re.I)
+    for x in range(0, len(months)):
+        if z.match(months[x]):
+            return x + 1
+    return None
 
 class Drawing(object):
     def __init__(self):
@@ -117,11 +132,15 @@ class Milestone(object):
     named_stroke_width = 3
     line_width = 2
     text_margin = 5
-    def __init__(self, y, name=None):
+    def __init__(self, y, month=None, name=None):
         self.y = y
         self.name = name
+        self.mno = mno_from_mo(month)
         self.x = None
         self.color = None
+
+        if self.mno:
+            self.name = '%d: %s' % (self.mno, self.name)
 
     def setx(self, x):
         self.x = x
@@ -199,7 +218,7 @@ def main():
         y = 50
         div.add_milestone(Milestone(doc_height - Milestone.named_radius))
         for k in division["Milestones"]:
-            div.add_milestone(Milestone(doc_height - y, division["Milestones"][k]))
+            div.add_milestone(Milestone(doc_height - y, k, division["Milestones"][k]))
             y += 50
         div.add_milestone(Milestone(Milestone.named_radius))
 
