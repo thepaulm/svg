@@ -18,7 +18,7 @@ class Drawing(object):
     def line(self, x1, y1, x2, y2, lw):
         pass
 
-    def text(self, s, x, y):
+    def text(self, s, x, y, bold=False, pix=0):
         pass
 
     def text_pixlen(self, s):
@@ -39,8 +39,11 @@ class SVG(Drawing):
     def __init__(self):
         super(SVG, self).__init__()
 
-    def text(self, s, x, y):
-        style = "font-family:monospace;font-size:%dpx;" % SVG.pix_per_char
+    def text(self, s, x, y, bold=False, pix=pix_per_char):
+        weight = ""
+        if bold:
+            weight = "font-weight: bold;"
+        style = "font-family:monospace;font-size:%dpx;%s" % (pix, weight)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
             (style, x, y, self.color, s)
 
@@ -77,7 +80,7 @@ class Division(object):
     def draw(self, dr, x):
 
         dr.set_color(self.color)
-        dr.text(self.name, x, doc_height)
+        dr.text(self.name, x, doc_height, bold=True, pix=18)
 
         last_ms = None
         for ms in self.mss:
