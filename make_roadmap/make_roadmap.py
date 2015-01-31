@@ -35,6 +35,7 @@ class Drawing(object):
 
 class SVG(Drawing):
     pix_per_char = 12
+    grid_spaces = 21
 
     def __init__(self):
         super(SVG, self).__init__()
@@ -52,15 +53,28 @@ class SVG(Drawing):
             return 0
         return len(s) * SVG.pix_per_char
 
+    def grid(self, x, y):
+        self.set_color("grey")
+        at = 0
+        while at < x:
+            self.line(at, 0, at, y)
+            at += SVG.grid_spaces
+        at = 0
+        while at < y:
+            self.line(0, at, x, at)
+            at += SVG.grid_spaces
+
     def create(self, x, y):
         print '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
         print '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">' % (x, y)
+
+        self.grid(x, y)
 
     def circle(self, x, y, r, sw):
         print '<circle cx="%d" cy="%d" r="%d" stroke="%s" stroke-width="%d" fill="white" />' %\
             (x, y, r, self.color, sw)
 
-    def line(self, x1, y1, x2, y2, lw):
+    def line(self, x1, y1, x2, y2, lw=1):
         print '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="%d" />' %\
             (x1, y1, x2, y2, self.color, lw)
 
