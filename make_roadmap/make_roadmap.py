@@ -3,8 +3,8 @@
 import sys
 import json
 
-doc_width = 800
 doc_height = 400
+doc_margin = 20
 start_x = 50
 conf_file = 'roadmap.json'
 
@@ -21,6 +21,9 @@ class Drawing(object):
     def text(self, s, x, y):
         pass
 
+    def text_pixlen(self, s):
+        return 0
+
     def circle(self, x, y, r, sw):
         pass
 
@@ -31,12 +34,20 @@ class Drawing(object):
         pass
 
 class SVG(Drawing):
+    pix_per_char = 12
+
     def __init__(self):
         super(SVG, self).__init__()
 
     def text(self, s, x, y):
-        print '<text x="%d" y="%d" fill="%s">%s</text>' %\
-            (x, y, self.color, s)
+        style = "font-family:monospace;font-size:%dpx;" % SVG.pix_per_char
+        print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
+            (style, x, y, self.color, s)
+
+    def text_pixlen(self, s):
+        if not s:
+            return 0
+        return len(s) * SVG.pix_per_char
 
     def create(self, x, y):
         print '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
@@ -54,27 +65,35 @@ class SVG(Drawing):
         print '</svg>'
 
 class Division(object):
-    def __init__(self, name, color, startx):
+    def __init__(self, name, color):
         self.name = name
         self.color = color
-        self.startx = startx
         self.mss = []
 
     def add_milestone(self, ms):
-        ms.setx(self.startx)
         ms.setcolor(self.color)
         self.mss.append(ms)
 
-    def draw(self, dr):
+    def draw(self, dr, x):
 
         dr.set_color(self.color)
-        dr.text(self.name, self.startx, doc_height)
+        dr.text(self.name, x, doc_height)
 
         last_ms = None
         for ms in self.mss:
+            ms.setx(x)
             ms.draw(dr)
             ms.connect(last_ms, dr)
             last_ms = ms
+
+    def width(self, dr):
+        w = 0
+        for ms in self.mss:
+            tmpw = ms.width(dr)
+            if tmpw > w:
+                w = tmpw    
+
+        return w
 
 class Milestone(object):
     named_radius = 9
@@ -114,6 +133,10 @@ class Milestone(object):
     def textx(self):
         return self.x + self.radius() + Milestone.text_margin
 
+    def width(self, dr):
+        # Width is radius of the circle, margin on each side of the text, and the text
+        return self.radius() + 2 * Milestone.text_margin + dr.text_pixlen(self.name)
+
     def draw(self, dr):
         r = self.radius()
         sw = self.stroke_width()
@@ -134,7 +157,7 @@ class Milestone(object):
             dr.line(x, y1, x, y2, Milestone.line_width)
 
 def main():
-    global doc_width, doc_height
+    global doc_margin, doc_height
 
     #
     # Read from conf file
@@ -151,22 +174,32 @@ def main():
     # Set up the divisions
     #
     divs = []
-    division_x = start_x
 
     for division in roadmap:
-        div = Division(division["name"], division["color"], division_x)
+        div = Division(division["name"], division["color"])
         divs.append(div)
-        division_x += 200
 
+        y = 50
         div.add_milestone(Milestone(doc_height - Milestone.named_radius))
-        div.add_milestone(Milestone(100, "Bar thing"))
-        div.add_milestone(Milestone(50, "Foo thing"))
+        for k in division["Milestones"]:
+            div.add_milestone(Milestone(doc_height - y, division["Milestones"][k]))
+            y += 50
         div.add_milestone(Milestone(Milestone.named_radius))
 
-    dr.create(doc_width, doc_height)
-
+    #
+    # Figure out sizes
+    #
+    x = doc_margin
     for div in divs:
-        div.draw(dr)
+        x += div.width(dr)
+    x += doc_margin
+
+    dr.create(x, doc_height)
+
+    x = doc_margin
+    for div in divs:
+        div.draw(dr, x)
+        x += div.width(dr)
 
     dr.close()
 

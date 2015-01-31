@@ -16,6 +16,14 @@
             "April 2015" : "More"
         },
         "color" : "blue"
+    },
+    {
+        "name" : "Other Dman",
+        "Milestones" : {
+            "Jan 2015" : "start off year",
+            "June 2015" : "thing"
+        },
+        "color" : "green"
     }
     ]
 }
