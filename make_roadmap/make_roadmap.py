@@ -63,10 +63,10 @@ class SVG(Drawing):
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
             (style, x, y, self.color, s)
 
-    def text_pixlen(self, s):
+    def text_pixlen(self, s, pix=pix_per_char):
         if not s:
             return 0
-        return len(s) * SVG.pix_per_char
+        return len(s) * (pix * (float(2)/float(3)))
 
     def grid(self, x, y):
         self.set_color("grey")
@@ -97,6 +97,8 @@ class SVG(Drawing):
         print '</svg>'
 
 class Division(object):
+    pix_per_name = 18
+
     def __init__(self, name, color):
         self.name = name
         self.color = color
@@ -109,8 +111,8 @@ class Division(object):
     def draw(self, dr, x):
 
         dr.set_color(self.color)
-        dr.text(self.name, x - Milestone.named_radius / 2,
-                doc_height - doc_margin, bold=True, pix=18)
+        dr.text(self.name, x - Milestone.named_radius / float(2),
+                doc_height - doc_margin, bold=True, pix=Division.pix_per_name)
 
         last_ms = None
         for ms in self.mss:
@@ -125,7 +127,10 @@ class Division(object):
             tmpw = ms.width(dr)
             if tmpw > w:
                 w = tmpw    
-
+        tmpw = dr.text_pixlen(self.name, pix=Division.pix_per_name) - \
+               Milestone.named_radius / float(2) + Milestone.text_margin
+        if tmpw > w:
+            w = tmpw
         return w
 
 class Milestone(object):
