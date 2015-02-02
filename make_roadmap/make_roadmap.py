@@ -108,14 +108,33 @@ class Division(object):
         ms.setcolor(self.color)
         self.mss.append(ms)
 
-    def draw(self, dr, x):
+    def draw(self, dr, x, bottom, top):
 
+        # Print our name at the bottom
         dr.set_color(self.color)
         dr.text(self.name, x - Milestone.named_radius / float(2),
                 doc_height - doc_margin, bold=True, pix=Division.pix_per_name)
 
-        last_ms = None
+        # Make the top and bottom fake milstones and insert them in order
+        mtop = Milestone()
+        mbottom = Milestone()
+        mtop.sety(top)
+        mbottom.sety(bottom)
+
+        self.mss.sort(key = lambda ms: ms.mno)
+
+        y = doc_height - doc_margin - Division.pix_per_name
+
         for ms in self.mss:
+            ms.sety(y)
+            y -= (SVG.pix_per_char + Milestone.named_radius * 2)
+
+        todraw = [mbottom] + self.mss + [mtop]
+
+
+        last_ms = None
+        for ms in todraw:
+            print >> sys.stderr, "Doing: %s" % ms.name
             ms.setx(x)
             ms.draw(dr)
             ms.connect(last_ms, dr)
@@ -138,11 +157,11 @@ class Milestone(object):
     named_stroke_width = 3
     line_width = 2
     text_margin = 5
-    def __init__(self, y, month=None, name=None):
-        self.y = y
+    def __init__(self, month=None, name=None):
         self.name = name
         self.mno = mno_from_mo(month)
         self.x = None
+        self.y = None
         self.color = None
 
         if self.mno:
@@ -150,6 +169,9 @@ class Milestone(object):
 
     def setx(self, x):
         self.x = x
+
+    def sety(self, y):
+        self.y = y
 
     def setcolor(self, color):
         self.color = color
@@ -221,13 +243,8 @@ def main():
         div = Division(division["name"], division["color"])
         divs.append(div)
 
-        y = 50
-        div.add_milestone(Milestone(doc_height - Milestone.named_radius - doc_margin))
         for k in division["Milestones"]:
-            div.add_milestone(Milestone(doc_height - y, k, division["Milestones"][k]))
-            y += 50
-        div.add_milestone(Milestone(Milestone.named_radius))
-
+            div.add_milestone(Milestone(k, division["Milestones"][k]))
     #
     # Figure out sizes
     #
@@ -238,9 +255,14 @@ def main():
 
     dr.create(x, doc_height)
 
+    # Calculate the regions
     x = doc_margin
+    bottom = doc_height - Milestone.named_radius - doc_margin
+    top = Milestone.named_radius
+
+    # Draw all the divisions
     for div in divs:
-        div.draw(dr, x)
+        div.draw(dr, x, bottom, top)
         x += div.width(dr)
 
     dr.close()
