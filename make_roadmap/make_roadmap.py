@@ -23,6 +23,49 @@ def mno_from_mo(mo):
             return x + 1
     return None
 
+def yno_from_mo(mo):
+    if not mo:
+        return None
+    yr = string.split(mo)[1]
+    return int(yr)
+
+class GraphInfo(object):
+    def __init__(self):
+        self.e_year = 9999
+        self.l_year = 0
+        self.e_month = 13
+        self.l_month = 0
+        self.ms_per_mo = None
+
+    def __str__(self):
+        return "%d %d to %d %d max: %d" % \
+            (self.e_month, self.e_year, self.l_month, self.l_year, self.ms_per_mo)
+
+def calc_graph_info(divs):
+    gi = GraphInfo()
+
+    for d in divs:
+        for ms in d.mss:
+            if ms.yno < gi.e_year:
+                gi.e_year = ms.yno
+            if ms.yno > gi.l_year:
+                gi.l_year = ms.yno
+
+    m = []
+    for d in divs:
+        for ms in d.mss:
+            c = {}
+            if ms.yno == gi.e_year and ms.mno < gi.e_month:
+                gi.e_month = ms.mno
+            if ms.yno == gi.l_year and ms.mno > gi.l_month:
+                gi.l_month = ms.mno
+            c[(ms.yno, ms.mno)] = c.get((ms.yno, ms.mno), 0) + 1
+            m.append(max(c.values()))
+
+    gi.ms_per_mo = max(m)
+
+    return gi
+
 class Drawing(object):
     def __init__(self):
         pass
@@ -160,6 +203,7 @@ class Milestone(object):
     def __init__(self, month=None, name=None):
         self.name = name
         self.mno = mno_from_mo(month)
+        self.yno = yno_from_mo(month)
         self.x = None
         self.y = None
         self.color = None
@@ -252,6 +296,9 @@ def main():
     for div in divs:
         x += div.width(dr)
     x += doc_margin
+
+    gi = calc_graph_info(divs)
+    print >> sys.stderr, gi
 
     dr.create(x, doc_height)
 
