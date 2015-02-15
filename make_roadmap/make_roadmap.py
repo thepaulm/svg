@@ -63,6 +63,9 @@ class Month(object):
     def __str__(self):
         return "{%s, %s}" % (self.yr, self.mo)
 
+    def qstr(self):
+        return "Q%d %d" % (mo_to_quarter(self.mo), self.yr)
+
 class GraphInfo(object):
     def __init__(self):
         self.ms_per_mo = None
@@ -73,6 +76,13 @@ class GraphInfo(object):
         self.height = 0
         self.mo_height = 0
         self.ms_margin = Division.pix_per_name / float(2)
+        self.left = 0
+
+def mo_to_quarter(mo):
+    return (mo + 2) / 3
+
+def first_mo_of_quarter(q):
+    return (q - 1) * 3 + 1
 
 def calc_graph_info(divs, dr):
     global doc_margin
@@ -81,7 +91,8 @@ def calc_graph_info(divs, dr):
 
     e_year = 9999
     l_year = 0
-    width = doc_margin
+    gi.left = 2 * dr.pix_per_char
+    width = gi.left
 
     # Find first and last year
     for d in divs:
@@ -110,6 +121,13 @@ def calc_graph_info(divs, dr):
 
     gi.ms_per_mo = max(m)
 
+    # Convert to first month of the quarter
+    quarter = mo_to_quarter(e_month)
+    e_month = first_mo_of_quarter(quarter)
+    # Convert to the last month of the quarter
+    quarter = mo_to_quarter(l_month)
+    l_month = first_mo_of_quarter(quarter) + 2
+
     # Build months list
     z = Month(e_year, e_month)
     while z != (l_year, l_month):
@@ -132,6 +150,8 @@ def calc_graph_info(divs, dr):
     return gi
 
 class Drawing(object):
+    pix_per_char = 0
+
     def __init__(self):
         self.colorstack = []
         self.color = None
@@ -171,11 +191,14 @@ class SVG(Drawing):
     def __init__(self):
         super(SVG, self).__init__()
 
-    def text(self, s, x, y, bold=False, pix=pix_per_char):
+    def text(self, s, x, y, bold=False, pix=pix_per_char, vertical=False):
         weight = ""
+        writing_mode = ""
         if bold:
             weight = "font-weight: bold;"
-        style = "font-family:monospace;font-size:%dpx;%s" % (pix, weight)
+        if vertical:
+            writing_mode = "writing-mode: tb;"
+        style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
             (style, x, y, self.color, s)
 
@@ -186,13 +209,13 @@ class SVG(Drawing):
 
     def grid(self, gi):
         self.push_color("grey")
-        at = 0
+        at = gi.left
         while at < gi.width:
             self.line(at, 0, at, gi.bottom)
             at += SVG.grid_spaces
         at = 0
         while at < gi.bottom:
-            self.line(0, at, gi.width, at)
+            self.line(gi.left, at, gi.width, at)
             at += SVG.grid_spaces
         self.pop_color()
 
@@ -245,7 +268,7 @@ class Division(object):
 
         for ms in self.mss:
             ms.sety(y)
-            y -= (SVG.pix_per_char + Milestone.named_radius * 2)
+            y -= (dr.pix_per_char + Milestone.named_radius * 2)
 
         todraw = [mbottom] + self.mss + [mtop]
 
@@ -345,7 +368,10 @@ def draw_months(dr, gi):
     dr.line(0, y, dr.width, y)
     for m in gi.months:
         y -= gi.mo_height
-        dr.line(0, y, dr.width, y)
+        # Only draw the quarter marks
+        if m.mo % 3 == 0:
+            dr.line(0, y, dr.width, y)
+            dr.text(m.qstr(), dr.pix_per_char, y + doc_margin, vertical=True)
     dr.pop_color()
 
 def main():
@@ -386,7 +412,7 @@ def main():
     draw_months(dr, gi)
 
     # Draw all the divisions
-    x = doc_margin
+    x = gi.left + Milestone.named_radius
     for div in divs:
         div.draw(dr, x, gi)
         x += div.width(dr)
