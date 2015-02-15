@@ -5,7 +5,6 @@ import json
 import re
 import string
 
-doc_height = 400
 doc_margin = 20
 start_x = 50
 conf_file = 'roadmap.json'
@@ -69,20 +68,31 @@ class GraphInfo(object):
         self.ms_per_mo = None
         self.months = []
         self.bottom = 0
+        self.top = 0
+        self.width = 0
+        self.height = 0
+        self.mo_height = 0
+        self.ms_margin = Division.pix_per_name / float(2)
 
-def calc_graph_info(divs):
+def calc_graph_info(divs, dr):
+    global doc_margin
+
     gi = GraphInfo()
 
     e_year = 9999
     l_year = 0
+    width = doc_margin
 
     # Find first and last year
     for d in divs:
+        width += d.width(dr)
         for ms in d.mss:
             if ms.yno < e_year:
                 e_year = ms.yno
             if ms.yno > l_year:
                 l_year = ms.yno
+    width += doc_margin
+    gi.width = width
 
     # Find first and last months and the counts per month
     e_month = 13
@@ -100,6 +110,7 @@ def calc_graph_info(divs):
 
     gi.ms_per_mo = max(m)
 
+    # Build months list
     z = Month(e_year, e_month)
     while z != (l_year, l_month):
         gi.months.append(z)
@@ -109,14 +120,31 @@ def calc_graph_info(divs):
     for m in gi.months:
         print >> sys.stderr, m
 
+    # Figure the y space for the drawing part
+    bottom_offset = 2 * Milestone.named_radius + doc_margin
+    top_offset = Milestone.named_radius
+
+    gi.mo_height = gi.ms_per_mo * (gi.ms_margin * 2 + Milestone.named_radius * 2)
+    gi.height = len(gi.months) * gi.mo_height + bottom_offset + top_offset
+    gi.bottom = gi.height - bottom_offset
+    gi.top = Milestone.named_radius
+
     return gi
 
 class Drawing(object):
     def __init__(self):
-        pass
+        self.colorstack = []
+        self.color = None
 
     def set_color(self, c):
         self.color = c
+
+    def push_color(self, c):
+        self.colorstack.append(self.color)
+        self.color = c
+
+    def pop_color(self):
+        self.color = self.colorstack.pop()
 
     def line(self, x1, y1, x2, y2, lw):
         pass
@@ -156,22 +184,22 @@ class SVG(Drawing):
             return 0
         return len(s) * (pix * (float(2)/float(3)))
 
-    def grid(self, x, y):
-        self.set_color("grey")
+    def grid(self, gi):
+        self.push_color("grey")
         at = 0
-        while at < x:
-            self.line(at, 0, at, y)
+        while at < gi.width:
+            self.line(at, 0, at, gi.bottom)
             at += SVG.grid_spaces
         at = 0
-        while at < y:
-            self.line(0, at, x, at)
+        while at < gi.bottom:
+            self.line(0, at, gi.width, at)
             at += SVG.grid_spaces
+        self.pop_color()
 
     def create(self, x, y):
         print '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
         print '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">' % (x, y)
 
-        self.grid(x, y)
         self.width = x
         self.height = y
 
@@ -198,22 +226,22 @@ class Division(object):
         ms.setcolor(self.color)
         self.mss.append(ms)
 
-    def draw(self, dr, x, bottom, top):
+    def draw(self, dr, x, gi):
 
         # Print our name at the bottom
         dr.set_color(self.color)
         dr.text(self.name, x - Milestone.named_radius / float(2),
-                doc_height - doc_margin, bold=True, pix=Division.pix_per_name)
+                gi.height - doc_margin, bold=True, pix=Division.pix_per_name)
 
         # Make the top and bottom fake milstones and insert them in order
         mtop = Milestone()
         mbottom = Milestone()
-        mtop.sety(top)
-        mbottom.sety(bottom)
+        mtop.sety(gi.top)
+        mbottom.sety(gi.bottom)
 
         self.mss.sort(key = lambda ms: ms.mno)
 
-        y = doc_height - doc_margin - Division.pix_per_name
+        y = gi.bottom - gi.ms_margin - Milestone.named_radius
 
         for ms in self.mss:
             ms.sety(y)
@@ -312,10 +340,16 @@ class Milestone(object):
             dr.line(x, y1, x, y2, Milestone.line_width)
 
 def draw_months(dr, gi):
-    dr.line(0, gi.bottom, dr.width, gi.bottom)
+    dr.push_color("black")
+    y = gi.bottom
+    dr.line(0, y, dr.width, y)
+    for m in gi.months:
+        y -= gi.mo_height
+        dr.line(0, y, dr.width, y)
+    dr.pop_color()
 
 def main():
-    global doc_margin, doc_height
+    global doc_margin
 
     #
     # Read from conf file
@@ -342,26 +376,19 @@ def main():
     #
     # Figure out sizes
     #
-    x = doc_margin
-    for div in divs:
-        x += div.width(dr)
-    x += doc_margin
-
-    gi = calc_graph_info(divs)
-
-    dr.create(x, doc_height)
+    gi = calc_graph_info(divs, dr)
+    dr.create(gi.width, gi.height)
 
     # Calculate the regions
-    x = doc_margin
-    gi.bottom = doc_height - Milestone.named_radius - doc_margin
-    top = Milestone.named_radius
+    dr.grid(gi)
 
     # Draw the months
     draw_months(dr, gi)
 
     # Draw all the divisions
+    x = doc_margin
     for div in divs:
-        div.draw(dr, x, gi.bottom, top)
+        div.draw(dr, x, gi)
         x += div.width(dr)
 
     dr.close()
