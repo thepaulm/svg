@@ -29,40 +29,85 @@ def yno_from_mo(mo):
     yr = string.split(mo)[1]
     return int(yr)
 
-class GraphInfo(object):
-    def __init__(self):
-        self.e_year = 9999
-        self.l_year = 0
-        self.e_month = 13
-        self.l_month = 0
-        self.ms_per_mo = None
+class Month(object):
+    def __init__(self, yr, mo):
+        self.yr = int(yr)
+        self.mo = int(mo)
+
+    def months_tuple(self, c):
+        yr = self.yr
+        mo = self.mo
+        while c > 0:
+            mo += 1
+            if mo == 13:
+                yr += 1
+                mo = 1
+            c -= 1
+        return (yr, mo)
+
+    def __add__(self, no):
+        (yr, mo) = self.months_tuple(no)
+        return Month(yr, mo)
+
+    def __iadd__(self, no):
+        (yr, mo) = self.months_tuple(no)
+        self.yr = yr
+        self.mo = mo
+        return self
+
+    def __eq__(self, t):
+        return self.yr == t[0] and self.mo == t[1]
+
+    def __ne__(self, t):
+        return not self == t
 
     def __str__(self):
-        return "%d %d to %d %d max: %d" % \
-            (self.e_month, self.e_year, self.l_month, self.l_year, self.ms_per_mo)
+        return "{%s, %s}" % (self.yr, self.mo)
+
+class GraphInfo(object):
+    def __init__(self):
+        self.ms_per_mo = None
+        self.months = []
+        self.bottom = 0
 
 def calc_graph_info(divs):
     gi = GraphInfo()
 
+    e_year = 9999
+    l_year = 0
+
+    # Find first and last year
     for d in divs:
         for ms in d.mss:
-            if ms.yno < gi.e_year:
-                gi.e_year = ms.yno
-            if ms.yno > gi.l_year:
-                gi.l_year = ms.yno
+            if ms.yno < e_year:
+                e_year = ms.yno
+            if ms.yno > l_year:
+                l_year = ms.yno
 
+    # Find first and last months and the counts per month
+    e_month = 13
+    l_month = 0
     m = []
     for d in divs:
         for ms in d.mss:
             c = {}
-            if ms.yno == gi.e_year and ms.mno < gi.e_month:
-                gi.e_month = ms.mno
-            if ms.yno == gi.l_year and ms.mno > gi.l_month:
-                gi.l_month = ms.mno
+            if ms.yno == e_year and ms.mno < e_month:
+                e_month = ms.mno
+            if ms.yno == l_year and ms.mno > l_month:
+                l_month = ms.mno
             c[(ms.yno, ms.mno)] = c.get((ms.yno, ms.mno), 0) + 1
             m.append(max(c.values()))
 
     gi.ms_per_mo = max(m)
+
+    z = Month(e_year, e_month)
+    while z != (l_year, l_month):
+        gi.months.append(z)
+        z = z + 1
+    gi.months.append(z)
+
+    for m in gi.months:
+        print >> sys.stderr, m
 
     return gi
 
@@ -127,6 +172,8 @@ class SVG(Drawing):
         print '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">' % (x, y)
 
         self.grid(x, y)
+        self.width = x
+        self.height = y
 
     def circle(self, x, y, r, sw):
         print '<circle cx="%d" cy="%d" r="%d" stroke="%s" stroke-width="%d" fill="white" />' %\
@@ -264,6 +311,9 @@ class Milestone(object):
 
             dr.line(x, y1, x, y2, Milestone.line_width)
 
+def draw_months(dr, gi):
+    dr.line(0, gi.bottom, dr.width, gi.bottom)
+
 def main():
     global doc_margin, doc_height
 
@@ -298,18 +348,20 @@ def main():
     x += doc_margin
 
     gi = calc_graph_info(divs)
-    print >> sys.stderr, gi
 
     dr.create(x, doc_height)
 
     # Calculate the regions
     x = doc_margin
-    bottom = doc_height - Milestone.named_radius - doc_margin
+    gi.bottom = doc_height - Milestone.named_radius - doc_margin
     top = Milestone.named_radius
+
+    # Draw the months
+    draw_months(dr, gi)
 
     # Draw all the divisions
     for div in divs:
-        div.draw(dr, x, bottom, top)
+        div.draw(dr, x, gi.bottom, top)
         x += div.width(dr)
 
     dr.close()
