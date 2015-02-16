@@ -8,6 +8,7 @@ import string
 doc_margin = 20
 start_x = 50
 conf_file = 'roadmap.json'
+doc_background = "#dddddd"
 
 months = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
           'august', 'september', 'october', 'november', 'december']
@@ -222,8 +223,10 @@ class SVG(Drawing):
         self.pop_color()
 
     def create(self, x, y):
+        global doc_background
         print '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
-        print '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">' % (x, y)
+        print '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg" ' \
+              'style="background: %s">' % (x, y, doc_background)
 
         self.width = x
         self.height = y
