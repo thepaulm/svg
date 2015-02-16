@@ -4,25 +4,26 @@
     {
         "name" : "First Division",
         "Milestones" : {
-            "March 2015" : "First thing of new year",
-            "December 2014" : "Last thing of last year"
+            "First thing of new year" : "March 2015",
+            "Last thing of last year" : "December 2014"
         },
         "color" : "red"
     },
     {
         "name" : "Second Division",
         "Milestones" : {
-            "March 2015" : "Make progress",
-            "April 2015" : "More",
-            "January 2015" : "Out of order elem"
+            "Make progress" : "March 2015",
+            "Birthday!" : "March 2015",
+            "More" : "April 2015",
+            "Out of order elem" : "January 2015"
         },
         "color" : "blue"
     },
     {
         "name" : "Other Dman",
         "Milestones" : {
-            "Jan 2015" : "start off year",
-            "June 2015" : "thing"
+            "start off year" : "Jan 2015",
+            "thing" : "June 2015"
         },
         "color" : "green"
     }

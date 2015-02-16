@@ -398,7 +398,7 @@ def main():
         divs.append(div)
 
         for k in division["Milestones"]:
-            div.add_milestone(Milestone(k, division["Milestones"][k]))
+            div.add_milestone(Milestone(division["Milestones"][k], k))
     #
     # Figure out sizes
     #
