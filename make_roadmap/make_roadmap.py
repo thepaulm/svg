@@ -270,13 +270,18 @@ class Division(object):
 
         # Draw the milestones in their month locations
         for m in gi.months:
-            # y for the milestone is the top milestone in this month
-            msy = y - (gi.ms_per_mo - 1) * gi.ms_vspace
+            thismoms = []
             for ms in self.mss:
                 if m.mo == ms.mno and m.yr == ms.yno:
+                    thismoms.append(ms)
+
+            # y for the milestone is the top milestone in this month
+            msy = y - (gi.ms_per_mo - 1) * gi.ms_vspace + (len(thismoms) - 1) * gi.ms_vspace
+            for ms in thismoms:
                     ms.sety(msy)
                     # Next milestone in this month will be one slot down
-                    msy += gi.ms_vspace
+                    msy -= gi.ms_vspace
+
             y -= gi.mo_height
 
         todraw = [mbottom] + self.mss + [mtop]
