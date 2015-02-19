@@ -204,8 +204,8 @@ class SVG(Drawing):
         if vertical:
             writing_mode = "writing-mode: tb;"
         if not vertical and pix == SVG.pix_per_char:
-            print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" />' %\
-                (x - pix / float(2), y - pix, self.text_pixlen(s), pix * 1.2,\
+            print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" stroke="black" />' %\
+                (2 + x - pix / float(2), y - pix, self.text_pixlen(s), pix * 1.5,\
                  text_background)
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
