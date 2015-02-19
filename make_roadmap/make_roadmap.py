@@ -241,9 +241,14 @@ class SVG(Drawing):
         print '<circle cx="%d" cy="%d" r="%d" stroke="%s" stroke-width="%d" fill="white" />' %\
             (x, y, r, self.color, sw)
 
-    def line(self, x1, y1, x2, y2, lw=1):
-        print '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="%d" />' %\
-            (x1, y1, x2, y2, self.color, lw)
+    def line(self, x1, y1, x2, y2, lw=1, dash=False):
+        strokebits = 'stroke="%s" stroke-width="%d"' % (self.color, lw)
+        if dash:
+            print '<path stroke-dasharray="10,10" d="M%d %d l%d %d" %s />' %\
+                (x1, y1, x2, y2, strokebits)
+        else:
+            print '<line x1="%d" y1="%d" x2="%d" y2="%d" %s />' %\
+                (x1, y1, x2, y2, strokebits)
 
     def close(self):
         print '</svg>'
@@ -396,7 +401,7 @@ def draw_months(dr, gi):
         y -= gi.mo_height
         # Only draw the quarter marks
         if m.mo % 3 == 0:
-            dr.line(0, y, dr.width, y)
+            dr.line(0, y, dr.width, y, dash=False)
             dr.text(m.qstr(), dr.pix_per_char, y + doc_margin, vertical=True)
     dr.pop_color()
 
