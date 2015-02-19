@@ -244,7 +244,7 @@ class SVG(Drawing):
     def line(self, x1, y1, x2, y2, lw=1, dash=False):
         strokebits = 'stroke="%s" stroke-width="%d"' % (self.color, lw)
         if dash:
-            print '<path stroke-dasharray="10,10" d="M%d %d l%d %d" %s />' %\
+            print '<path stroke-dasharray="10,10" d="M%d %d L%d %d" %s />' %\
                 (x1, y1, x2, y2, strokebits)
         else:
             print '<line x1="%d" y1="%d" x2="%d" y2="%d" %s />' %\
@@ -401,7 +401,7 @@ def draw_months(dr, gi):
         y -= gi.mo_height
         # Only draw the quarter marks
         if m.mo % 3 == 0:
-            dr.line(0, y, dr.width, y, dash=False)
+            dr.line(0, y, dr.width, y, dash=True)
             dr.text(m.qstr(), dr.pix_per_char, y + doc_margin, vertical=True)
     dr.pop_color()
 
