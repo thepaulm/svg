@@ -9,6 +9,7 @@ doc_margin = 20
 start_x = 50
 conf_file = 'roadmap.json'
 doc_background = "#dddddd"
+text_background = "#eeeeee"
 
 months = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
           'august', 'september', 'october', 'november', 'december']
@@ -195,12 +196,17 @@ class SVG(Drawing):
         super(SVG, self).__init__()
 
     def text(self, s, x, y, bold=False, pix=pix_per_char, vertical=False):
+        global text_background
         weight = ""
         writing_mode = ""
         if bold:
             weight = "font-weight: bold;"
         if vertical:
             writing_mode = "writing-mode: tb;"
+        if not vertical and pix == SVG.pix_per_char:
+            print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" />' %\
+                (x - pix / float(2), y - pix, self.text_pixlen(s), pix * 1.2,\
+                 text_background)
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
             (style, x, y, self.color, s)
@@ -364,11 +370,11 @@ class Milestone(object):
         return self.radius() + 2 * Milestone.text_margin + dr.text_pixlen(self.name)
 
     def draw(self, dr):
+        if self.name:
+            dr.text(self.name, self.textx(), self.y + self.radius() / 2)
         r = self.radius()
         sw = self.stroke_width()
         dr.circle(self.x, self.y, r, sw)
-        if self.name:
-            dr.text(self.name, self.textx(), self.y + self.radius() / 2)
 
     def connect(self, other, dr):
         if other:
