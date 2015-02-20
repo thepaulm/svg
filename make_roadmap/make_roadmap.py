@@ -4,10 +4,10 @@ import sys
 import json
 import re
 import string
+import glob
 
 doc_margin = 20
 start_x = 50
-conf_file = 'roadmap.json'
 doc_background = "#dddddd"
 text_background = "#eeeeee"
 
@@ -406,30 +406,31 @@ def draw_months(dr, gi):
     dr.pop_color()
 
 def main():
-    global doc_margin
+    #
+    # Set up the divisions
+    #
+    divs = []
 
-    #
-    # Read from conf file
-    #
-    roadmap = json.load(open(conf_file))
-    roadmap = roadmap["Roadmap"]
+    # Read each of the json files
+    for rmf in glob.glob('./*.json'):
+        try:
+            roadmap = json.load(open(rmf))
+            roadmap = roadmap["Roadmap"]
+
+            for division in roadmap:
+                div = Division(division["name"], division["color"])
+                divs.append(div)
+
+                for k in division["Milestones"]:
+                    div.add_milestone(Milestone(division["Milestones"][k], k))
+        except Exception, e:
+            print >> sys.stderr, "%s: " % rmf, e
 
     #
     # Make the Drawing
     #
     dr = SVG()
 
-    #
-    # Set up the divisions
-    #
-    divs = []
-
-    for division in roadmap:
-        div = Division(division["name"], division["color"])
-        divs.append(div)
-
-        for k in division["Milestones"]:
-            div.add_milestone(Milestone(division["Milestones"][k], k))
     #
     # Figure out sizes
     #
