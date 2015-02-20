@@ -8,8 +8,9 @@ import glob
 
 doc_margin = 20
 start_x = 50
-doc_background = "#dddddd"
-text_background = "#eeeeee"
+doc_background = "#eeeeee"
+text_background = "#fefefe"
+grid_color = "#cfcfcf"
 
 months = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
           'august', 'september', 'october', 'november', 'december']
@@ -205,7 +206,7 @@ class SVG(Drawing):
             writing_mode = "writing-mode: tb;"
         if not vertical and pix == SVG.pix_per_char:
             print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" stroke="black" />' %\
-                (2 + x - pix / float(2), y - pix, self.text_pixlen(s), pix * 1.5,\
+                (2 + x - pix / float(2), y - pix, 1.15 * self.text_pixlen(s), pix * 1.5,\
                  text_background)
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
@@ -217,7 +218,8 @@ class SVG(Drawing):
         return len(s) * (pix * (float(2)/float(3)))
 
     def grid(self, gi):
-        self.push_color("grey")
+        global grid_color
+        self.push_color(grid_color)
         at = gi.left
         while at < gi.width:
             self.line(at, 0, at, gi.bottom)
@@ -333,8 +335,8 @@ class Milestone(object):
         self.y = None
         self.color = None
 
-        if self.mno:
-            self.name = '%d: %s' % (self.mno, self.name)
+        #if self.mno:
+            #self.name = '%d: %s' % (self.mno, self.name)
 
     # For sorting: Make a number that includes year and then month
     def key(self):
