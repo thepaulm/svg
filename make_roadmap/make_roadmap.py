@@ -232,9 +232,10 @@ class SVG(Drawing):
 
     def create(self, x, y):
         global doc_background
-        print '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
-        print '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg" ' \
-              'style="background: %s">' % (x, y, doc_background)
+        print '<!DOCTYPE html>'
+        print '<html>'
+        print '<body>'
+        print '<svg width="%d" height="%d" style="background: %s">' % (x, y, doc_background)
 
         self.width = x
         self.height = y
@@ -254,6 +255,9 @@ class SVG(Drawing):
 
     def close(self):
         print '</svg>'
+        print '</body>'
+        print '</html>'
+
 
 class Division(object):
     pix_per_name = 28
