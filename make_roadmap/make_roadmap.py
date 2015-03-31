@@ -214,7 +214,11 @@ class SVG(Drawing):
             self.rect(rx + SVG.shadow_offset, ry + SVG.shadow_offset,
                       self.text_pixlen(s + 'a'), pix * 1.5, "black")
             self.rect(rx, ry, self.text_pixlen(s + 'a'), pix * 1.5, text_background)
+
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
+        if pix != SVG.pix_per_char:
+            print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
+                (style, x + 2, y + 2, "black", s)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
             (style, x, y, self.color, s)
 
