@@ -190,7 +190,7 @@ class Drawing(object):
         pass
 
 class SVG(Drawing):
-    pix_per_char = 12
+    pix_per_char = 18
     grid_spaces = 21
 
     def __init__(self):
@@ -206,7 +206,7 @@ class SVG(Drawing):
             writing_mode = "writing-mode: tb;"
         if not vertical and pix == SVG.pix_per_char:
             print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" stroke="black" />' %\
-                (2 + x - pix / float(2), y - pix, 1.15 * self.text_pixlen(s), pix * 1.5,\
+                (x - pix / float(2), y - pix, self.text_pixlen(s + 'a'), pix * 1.5,\
                  text_background)
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
@@ -256,7 +256,7 @@ class SVG(Drawing):
         print '</svg>'
 
 class Division(object):
-    pix_per_name = 18
+    pix_per_name = 28
 
     def __init__(self, name, color):
         self.name = name
@@ -272,7 +272,7 @@ class Division(object):
         # Print our name at the bottom
         dr.set_color(self.color)
         dr.text(self.name, x - Milestone.named_radius / float(2),
-                gi.height - doc_margin, bold=True, pix=Division.pix_per_name)
+                gi.height - doc_margin, bold=False, pix=Division.pix_per_name)
 
         # Make the top and bottom fake milstones and insert them in order
         mtop = Milestone()
