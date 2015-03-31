@@ -183,6 +183,9 @@ class Drawing(object):
     def circle(self, x, y, r, sw):
         pass
 
+    def rect(self, x, y, width, height, fill):
+        pass
+
     def create(self):
         pass
 
@@ -192,6 +195,7 @@ class Drawing(object):
 class SVG(Drawing):
     pix_per_char = 18
     grid_spaces = 21
+    shadow_offset = 4
 
     def __init__(self):
         super(SVG, self).__init__()
@@ -205,9 +209,11 @@ class SVG(Drawing):
         if vertical:
             writing_mode = "writing-mode: tb;"
         if not vertical and pix == SVG.pix_per_char:
-            print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" stroke="black" />' %\
-                (x - pix / float(2), y - pix, self.text_pixlen(s + 'a'), pix * 1.5,\
-                 text_background)
+            rx = x - pix / float(2)
+            ry = y - pix
+            self.rect(rx + SVG.shadow_offset, ry + SVG.shadow_offset,
+                      self.text_pixlen(s + 'a'), pix * 1.5, "black")
+            self.rect(rx, ry, self.text_pixlen(s + 'a'), pix * 1.5, text_background)
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
             (style, x, y, self.color, s)
@@ -239,6 +245,10 @@ class SVG(Drawing):
 
         self.width = x
         self.height = y
+
+    def rect(self, x, y, width, height, fill):
+        print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" stroke="black" />' %\
+              (x, y, width, height, fill)
 
     def circle(self, x, y, r, sw):
         print '<circle cx="%d" cy="%d" r="%d" stroke="%s" stroke-width="%d" fill="white" />' %\
