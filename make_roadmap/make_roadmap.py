@@ -244,6 +244,9 @@ class SVG(Drawing):
     def create(self, x, y):
         global doc_background
         print '<!DOCTYPE html>'
+        print '<head>'
+        print '<meta charset="UTF-8">'
+        print '</head>'
         print '<html>'
         print '<body>'
         print '<svg width="%d" height="%d" style="background: %s">' % (x, y, doc_background)
