@@ -219,7 +219,7 @@ class SVG(Drawing):
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         if pix != SVG.pix_per_char:
             print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
-                (style, x + 2, y + 2, "black", s)
+                (style, x + 1, y + 1, "black", s)
         print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
             (style, x, y, self.color, s)
 
