@@ -5,6 +5,7 @@ import json
 import re
 import string
 import glob
+import codecs
 
 doc_margin = 20
 start_x = 50
@@ -449,6 +450,7 @@ def main():
     #
     # Make the Drawing
     #
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
     dr = SVG()
 
     #
