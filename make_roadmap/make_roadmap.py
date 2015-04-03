@@ -194,7 +194,7 @@ class Drawing(object):
         pass
 
 class SVG(Drawing):
-    pix_per_char = 18
+    pix_per_char = 12
     grid_spaces = 21
     shadow_offset = 4
 
@@ -278,7 +278,7 @@ class SVG(Drawing):
 
 
 class Division(object):
-    pix_per_name = 28
+    pix_per_name = 18
 
     def __init__(self, name, color):
         self.name = name
