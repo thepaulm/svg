@@ -347,7 +347,7 @@ class Division(object):
 class Milestone(object):
     named_radius = 9
     named_stroke_width = 3
-    line_width = 2
+    line_width = 8
     text_margin = 5
     def __init__(self, month=None, name=None):
         self.name = name
