@@ -21,7 +21,7 @@ def print_js(idn):
 <script>
 var elemCount = %d;
 var hgrowth = 25;
-var vgrowth = 10;
+var vgrowth = 6;
 var tsize = 12;
 var tgrowth = 4;
 var font = "font-family:monospace;font-size:";
@@ -29,12 +29,10 @@ var font = "font-family:monospace;font-size:";
 function enhanceText(elem) {
     bigtsize = tsize + tgrowth;
     fstring = font + bigtsize + "px;";
-    console.log(fstring);
     elem.setAttribute("style", fstring);
 }
 function dehanceText(elem) {
     fstring = font + tsize + "px;";
-    console.log(fstring);
     elem.setAttribute("style", fstring);
 }
 function enhanceRect(elem) {
@@ -60,7 +58,6 @@ function dehanceRect(elem) {
     elem.setAttribute("height", elem.getAttribute("origH"));
 }
 function fireIn(elem) {
-    console.log("IN");
     enhanceRect(elem);
 
     shad = document.getElementById(elem.getAttribute("shadow"));
@@ -70,7 +67,6 @@ function fireIn(elem) {
     enhanceText(text);
 }
 function fireOut(elem) {
-    console.log("OUT");
     dehanceRect(elem);
 
     shad = document.getElementById(elem.getAttribute("shadow"));
