@@ -16,6 +16,122 @@ grid_color = "#cfcfcf"
 months = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
           'august', 'september', 'october', 'november', 'december']
 
+def print_js(idn):
+    print '''
+<script>
+var elemCount = %d;
+var hgrowth = 25;
+var vgrowth = 10;
+var tsize = 12;
+var tgrowth = 4;
+var font = "font-family:monospace;font-size:";
+
+function enhanceText(elem) {
+    bigtsize = tsize + tgrowth;
+    fstring = font + bigtsize + "px;";
+    console.log(fstring);
+    elem.setAttribute("style", fstring);
+}
+function dehanceText(elem) {
+    fstring = font + tsize + "px;";
+    console.log(fstring);
+    elem.setAttribute("style", fstring);
+}
+function enhanceRect(elem) {
+    x = Number(elem.getAttribute("x"));
+    y = Number(elem.getAttribute("y"));
+    w = Number(elem.getAttribute("width"));
+    h = Number(elem.getAttribute("height"));
+
+    elem.setAttribute("origX", x);
+    elem.setAttribute("origY", y);
+    elem.setAttribute("origW", w);
+    elem.setAttribute("origH", h);
+
+    //elem.setAttribute("x", x - hgrowth);
+    elem.setAttribute("width", w + 2 * hgrowth);
+    elem.setAttribute("y", y - vgrowth);
+    elem.setAttribute("height", h + 2 * vgrowth);
+}
+function dehanceRect(elem) {
+    //elem.setAttribute("x", elem.getAttribute("origX"));
+    elem.setAttribute("y", elem.getAttribute("origY"));
+    elem.setAttribute("width", elem.getAttribute("origW"));
+    elem.setAttribute("height", elem.getAttribute("origH"));
+}
+function fireIn(elem) {
+    console.log("IN");
+    enhanceRect(elem);
+
+    shad = document.getElementById(elem.getAttribute("shadow"));
+    enhanceRect(shad);
+
+    text = document.getElementById(elem.getAttribute("text"));
+    enhanceText(text);
+}
+function fireOut(elem) {
+    console.log("OUT");
+    dehanceRect(elem);
+
+    shad = document.getElementById(elem.getAttribute("shadow"));
+    dehanceRect(shad);
+
+    text = document.getElementById(elem.getAttribute("text"));
+    dehanceText(text);
+}
+function isElemEnhanced(elem) {
+    enhance = elem.getAttribute("enhance");
+    if (enhance == "false")
+        return false;
+    return true;
+}
+function setElemEnhance(elem, enhance) {
+    elem.setAttribute("enhance", enhance);
+}
+function listenElem(evt) {
+    elem = evt.target;
+    evtX = evt.offsetX;
+    evtY = evt.offsetY;
+    elemX = Number(elem.getAttribute("x"));
+    elemY = Number(elem.getAttribute("y"));
+    elemW = Number(elem.getAttribute("width"));
+    elemH = Number(elem.getAttribute("height"));
+    enhance = isElemEnhanced(elem);
+    hEdge = elemX + elemW;
+    vEdge = elemY + elemH;
+    if (evtX >= elemX && evtX <= elemX + elemW &&
+        evtY >= elemY && evtY <= elemY + elemH) {
+        if (!enhance) {
+            setElemEnhance(elem, true);
+            fireIn(elem);
+        }
+    } else {
+        if (enhance) {
+            setElemEnhance(elem, false);
+            fireOut(elem);
+        }
+    }
+}
+function registerElem(elemName) {
+    rName = "rect_" + elemName;
+    sName = "shad_" + elemName;
+    tName = "text_" + elemName;
+    elem = document.getElementById(rName);
+    setElemEnhance(elem, false);
+    elem.setAttribute("shadow", sName);
+    elem.setAttribute("text", tName);
+    elem.addEventListener('mouseover', listenElem, false);
+    elem.addEventListener('mouseout', listenElem, false);
+}
+(function() {
+    var i;
+    for (i = 0; i < elemCount; i++) {
+        registerElem(i);
+    }
+})();
+</script>
+''' % idn
+
 def mno_from_mo(mo):
     if not mo:
         return None
@@ -200,6 +316,12 @@ class SVG(Drawing):
 
     def __init__(self):
         super(SVG, self).__init__()
+        self.idn = 0
+
+    def get_idn(self):
+        idn = self.idn
+        self.idn += 1
+        return idn
 
     def text(self, s, x, y, bold=False, pix=pix_per_char, vertical=False):
         global text_background
@@ -209,19 +331,27 @@ class SVG(Drawing):
             weight = "font-weight: bold;"
         if vertical:
             writing_mode = "writing-mode: tb;"
+
+        live = False
         if not vertical and pix == SVG.pix_per_char:
+            live = True
             rx = x - pix / float(2)
             ry = y - pix
+            idn = self.get_idn()
             self.rect(rx + SVG.shadow_offset, ry + SVG.shadow_offset,
-                      self.text_pixlen(s + 'a'), pix * 1.5, "black")
-            self.rect(rx, ry, self.text_pixlen(s + 'a'), pix * 1.5, text_background)
+                      self.text_pixlen(s + 'a'), pix * 1.5, "black", idn="shad_" + str(idn))
+            self.rect(rx, ry, self.text_pixlen(s + 'a'), pix * 1.5, text_background,
+                      idn="rect_" + str(idn))
 
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         if pix != SVG.pix_per_char:
             print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
                 (style, x + 1, y + 1, "black", s)
-        print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
-            (style, x, y, self.color, s)
+        ids = ""
+        if live:
+            ids = 'id = "text_%d"' % idn
+        print '<text %s style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
+              (ids, style, x, y, self.color, s)
 
     def text_pixlen(self, s, pix=pix_per_char):
         if not s:
@@ -243,6 +373,7 @@ class SVG(Drawing):
 
     def create(self, x, y):
         global doc_background
+
         print '<!DOCTYPE html>'
         print '<head>'
         print '<meta charset="UTF-8">'
@@ -254,9 +385,13 @@ class SVG(Drawing):
         self.width = x
         self.height = y
 
-    def rect(self, x, y, width, height, fill):
-        print '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" stroke="black" />' %\
-              (x, y, width, height, fill)
+    def rect(self, x, y, width, height, fill, idn=None):
+        if not idn:
+            idn = ''
+        else:
+            idn = 'id = "%s"' % idn
+        print '<rect %s x="%d" y="%d" width="%d" height="%d" fill="%s" stroke="black" />' %\
+              (idn, x, y, width, height, fill)
 
     def circle(self, x, y, r, sw):
         print '<circle cx="%d" cy="%d" r="%d" stroke="%s" stroke-width="%d" fill="white" />' %\
@@ -399,11 +534,11 @@ class Milestone(object):
         return self.radius() + 2 * Milestone.text_margin + dr.text_pixlen(self.name)
 
     def draw(self, dr):
-        if self.name:
-            dr.text(self.name, self.textx(), self.y + self.radius() / 2)
         r = self.radius()
         sw = self.stroke_width()
         dr.circle(self.x, self.y, r, sw)
+        if self.name:
+            dr.text(self.name, self.textx(), self.y + self.radius() / 2)
 
     def connect(self, other, dr):
         if other:
@@ -473,6 +608,8 @@ def main():
     for div in divs:
         div.draw(dr, x, gi)
         x += div.width(dr)
+
+    print_js(dr.idn);
 
     dr.close()
 
