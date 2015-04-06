@@ -412,12 +412,14 @@ class Division(object):
         self.name = name
         self.color = color
         self.mss = []
+        self.x = 0
 
     def add_milestone(self, ms):
         ms.setcolor(self.color)
         self.mss.append(ms)
 
-    def draw(self, dr, x, gi):
+    def draw(self, dr, gi):
+        x = self.x
 
         # Print our name at the bottom
         dr.set_color(self.color)
@@ -599,8 +601,12 @@ def main():
     # Draw all the divisions
     x = gi.left + Milestone.named_radius
     for div in divs:
-        div.draw(dr, x, gi)
+        div.x = x
         x += div.width(dr)
+
+    while len(divs):
+        div = divs.pop()
+        div.draw(dr, gi)
 
     print_js(dr.idn);
 
