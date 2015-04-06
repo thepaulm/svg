@@ -46,13 +46,11 @@ function enhanceRect(elem) {
     elem.setAttribute("origW", w);
     elem.setAttribute("origH", h);
 
-    //elem.setAttribute("x", x - hgrowth);
     elem.setAttribute("width", w + 2 * hgrowth);
     elem.setAttribute("y", y - vgrowth);
     elem.setAttribute("height", h + 2 * vgrowth);
 }
 function dehanceRect(elem) {
-    //elem.setAttribute("x", elem.getAttribute("origX"));
     elem.setAttribute("y", elem.getAttribute("origY"));
     elem.setAttribute("width", elem.getAttribute("origW"));
     elem.setAttribute("height", elem.getAttribute("origH"));
@@ -84,19 +82,9 @@ function isElemEnhanced(elem) {
 function setElemEnhance(elem, enhance) {
     elem.setAttribute("enhance", enhance);
 }
-function listenElem(evt) {
-    elem = evt.target;
-    evtX = evt.offsetX;
-    evtY = evt.offsetY;
-    elemX = Number(elem.getAttribute("x"));
-    elemY = Number(elem.getAttribute("y"));
-    elemW = Number(elem.getAttribute("width"));
-    elemH = Number(elem.getAttribute("height"));
+function listenElem(elem, telem, evt) {
     enhance = isElemEnhanced(elem);
-    hEdge = elemX + elemW;
-    vEdge = elemY + elemH;
-    if (evtX >= elemX && evtX <= elemX + elemW &&
-        evtY >= elemY && evtY <= elemY + elemH) {
+    if (evt.toElement == elem || evt.toElement == telem) {
         if (!enhance) {
             setElemEnhance(elem, true);
             fireIn(elem);
@@ -108,6 +96,11 @@ function listenElem(evt) {
         }
     }
 }
+function makeListenElem(elem, telem) {
+    return function(evt) {
+        listenElem(elem, telem, evt);
+    }
+}
 function registerElem(elemName) {
     rName = "rect_" + elemName;
     sName = "shad_" + elemName;
@@ -116,8 +109,12 @@ function registerElem(elemName) {
     setElemEnhance(elem, false);
     elem.setAttribute("shadow", sName);
     elem.setAttribute("text", tName);
-    elem.addEventListener('mouseover', listenElem, false);
-    elem.addEventListener('mouseout', listenElem, false);
+    telem = document.getElementById(tName);
+    f = makeListenElem(elem, telem);
+    elem.addEventListener('mouseover', f, false);
+    elem.addEventListener('mouseout', f, false);
+    telem.addEventListener('mouseover', f, false);
+    telem.addEventListener('mouseout', f, false);
 }
 (function() {
     var i;
