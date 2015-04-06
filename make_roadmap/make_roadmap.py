@@ -26,6 +26,15 @@ var tsize = 12;
 var tgrowth = 4;
 var font = "font-family:monospace;font-size:";
 
+function fixBoxLength(tElem, rElem, sElem) {
+    len = tElem.getComputedTextLength();
+
+    off = Number(tElem.getAttribute("x")) - Number(rElem.getAttribute("x"));
+    len += 2 * off;
+
+    rElem.setAttribute("width", len);
+    sElem.setAttribute("width", len);
+}
 function enhanceText(elem) {
     bigtsize = tsize + tgrowth;
     fstring = font + bigtsize + "px;";
@@ -63,6 +72,8 @@ function fireIn(elem) {
 
     text = document.getElementById(elem.getAttribute("text"));
     enhanceText(text);
+
+    fixBoxLength(text, elem, shad);
 }
 function fireOut(elem) {
     dehanceRect(elem);
@@ -72,6 +83,8 @@ function fireOut(elem) {
 
     text = document.getElementById(elem.getAttribute("text"));
     dehanceText(text);
+
+    fixBoxLength(text, elem, shad);
 }
 function isElemEnhanced(elem) {
     enhance = elem.getAttribute("enhance");
@@ -106,6 +119,7 @@ function registerElem(elemName) {
     sName = "shad_" + elemName;
     tName = "text_" + elemName;
     elem = document.getElementById(rName);
+    selem = document.getElementById(sName);
     setElemEnhance(elem, false);
     elem.setAttribute("shadow", sName);
     elem.setAttribute("text", tName);
@@ -115,6 +129,8 @@ function registerElem(elemName) {
     elem.addEventListener('mouseout', f, false);
     telem.addEventListener('mouseover', f, false);
     telem.addEventListener('mouseout', f, false);
+
+    fixBoxLength(telem, elem, selem);
 }
 (function() {
     var i;
