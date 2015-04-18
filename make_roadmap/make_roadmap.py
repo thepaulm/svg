@@ -318,6 +318,9 @@ class Drawing(object):
     def close(self):
         pass
 
+    def link(self, x, y, name, url):
+        pass
+
 class SVG(Drawing):
     pix_per_char = 12
     grid_spaces = 21
@@ -332,7 +335,7 @@ class SVG(Drawing):
         self.idn += 1
         return idn
 
-    def text(self, s, x, y, bold=False, pix=pix_per_char, vertical=False):
+    def text(self, s, x, y, bold=False, pix=pix_per_char, vertical=False, tid=None):
         global text_background
         weight = ""
         writing_mode = ""
@@ -341,26 +344,20 @@ class SVG(Drawing):
         if vertical:
             writing_mode = "writing-mode: tb;"
 
-        live = False
-        if not vertical and pix == SVG.pix_per_char:
-            live = True
-            rx = x - pix / float(2)
-            ry = y - pix
-            idn = self.get_idn()
-            self.rect(rx + SVG.shadow_offset, ry + SVG.shadow_offset,
-                      self.text_pixlen(s + 'a'), pix * 1.5, "black", idn="shad_" + str(idn))
-            self.rect(rx, ry, self.text_pixlen(s + 'a'), pix * 1.5, text_background,
-                      idn="rect_" + str(idn))
-
         style = "font-family:monospace;font-size:%dpx;%s%s" % (pix, weight, writing_mode)
         if pix != SVG.pix_per_char:
             print '<text style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
                 (style, x + 1, y + 1, "black", s)
         ids = ""
-        if live:
-            ids = 'id = "text_%d"' % idn
+        if tid:
+            ids = 'id = "%s"' % tid
         print '<text %s style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
               (ids, style, x, y, self.color, s)
+
+    def link(self, x, y, name, url):
+        print '<a xlink:href="%s">' % url
+        self.text(name, x, y)
+        print '</a>'
 
     def text_pixlen(self, s, pix=pix_per_char):
         if not s:
@@ -495,16 +492,16 @@ class Milestone(object):
     named_stroke_width = 3
     line_width = 8
     text_margin = 5
-    def __init__(self, month=None, name=None):
+    def __init__(self, month=None, name=None, duck=None):
         self.name = name
         self.mno = mno_from_mo(month)
         self.yno = yno_from_mo(month)
         self.x = None
         self.y = None
         self.color = None
-
-        #if self.mno:
-            #self.name = '%d: %s' % (self.mno, self.name)
+        print >> sys.stderr, "GOT MY DUCK"
+        self.DUCKUrl = duck
+        self.PhabTicket = None
 
     # For sorting: Make a number that includes year and then month
     def key(self):
@@ -549,7 +546,25 @@ class Milestone(object):
         sw = self.stroke_width()
         dr.circle(self.x, self.y, r, sw)
         if self.name:
-            dr.text(self.name, self.textx(), self.y + self.radius() / 2)
+            pix = SVG.pix_per_char
+            x = self.textx()
+            y = self.y + self.radius() / 2
+            rx = x - pix / float(2)
+            ry = y - pix
+            idn = dr.get_idn()
+            linecount = 1
+            if self.DUCKUrl:
+                linecount += 1
+
+            dr.rect(rx + SVG.shadow_offset, ry + SVG.shadow_offset,
+                    dr.text_pixlen(self.name + 'a'), linecount * pix * 1.5, "black",
+                    idn="shad_" + str(idn))
+            dr.rect(rx, ry, dr.text_pixlen(self.name + 'a'), linecount * pix * 1.5,
+                    text_background, idn="rect_" + str(idn))
+
+            dr.text(self.name, x, y, tid="text_%d" % idn)
+            if self.DUCKUrl:
+                dr.link(x, y + 1.5 * pix, "DUCK", self.DUCKUrl)
 
     def connect(self, other, dr):
         if other:
@@ -592,7 +607,18 @@ def main():
                 divs.append(div)
 
                 for k in division["Milestones"]:
-                    div.add_milestone(Milestone(division["Milestones"][k], k))
+                    name = k
+                    body = division["Milestones"][name]
+                    date = None
+                    duck = None
+                    try:
+                        date = body["Date"]
+                    except:
+                        date = body
+                    try:
+                        duck = body["Duck"]
+                    except:pass
+                    div.add_milestone(Milestone(date, name, duck=duck))
         except Exception, e:
             print >> sys.stderr, "%s: " % rmf, e
 
