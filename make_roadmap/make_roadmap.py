@@ -73,6 +73,11 @@ function fireIn(elem) {
     text = document.getElementById(elem.getAttribute("text"));
     enhanceText(text);
 
+    tlink = document.getElementById(elem.getAttribute("tlink"));
+    if (tlink) {
+        enhanceText(tlink);
+    }
+
     fixBoxLength(text, elem, shad);
 }
 function fireOut(elem) {
@@ -83,6 +88,11 @@ function fireOut(elem) {
 
     text = document.getElementById(elem.getAttribute("text"));
     dehanceText(text);
+
+    tlink = document.getElementById(elem.getAttribute("tlink"));
+    if (tlink) {
+        dehanceText(tlink);
+    }
 
     fixBoxLength(text, elem, shad);
 }
@@ -95,9 +105,9 @@ function isElemEnhanced(elem) {
 function setElemEnhance(elem, enhance) {
     elem.setAttribute("enhance", enhance);
 }
-function listenElem(elem, telem, evt) {
+function listenElem(elem, telem, tlelem, evt) {
     enhance = isElemEnhanced(elem);
-    if (evt.toElement == elem || evt.toElement == telem) {
+    if (evt.toElement == elem || evt.toElement == telem || evt.toElement == tlelem) {
         if (!enhance) {
             setElemEnhance(elem, true);
             fireIn(elem);
@@ -109,22 +119,25 @@ function listenElem(elem, telem, evt) {
         }
     }
 }
-function makeListenElem(elem, telem) {
+function makeListenElem(elem, telem, tlelem) {
     return function(evt) {
-        listenElem(elem, telem, evt);
+        listenElem(elem, telem, tlelem, evt);
     }
 }
 function registerElem(elemName) {
     rName = "rect_" + elemName;
     sName = "shad_" + elemName;
     tName = "text_" + elemName;
+    tlName = "tlink_" + elemName;
     elem = document.getElementById(rName);
     selem = document.getElementById(sName);
     setElemEnhance(elem, false);
     elem.setAttribute("shadow", sName);
     elem.setAttribute("text", tName);
+    elem.setAttribute("tlink", tlName);
     telem = document.getElementById(tName);
-    f = makeListenElem(elem, telem);
+    tlelem = document.getElementById(tlName);
+    f = makeListenElem(elem, telem, tlelem);
     elem.addEventListener('mouseover', f, false);
     elem.addEventListener('mouseout', f, false);
     telem.addEventListener('mouseover', f, false);
@@ -300,7 +313,7 @@ class Drawing(object):
     def line(self, x1, y1, x2, y2, lw):
         pass
 
-    def text(self, s, x, y, bold=False, pix=0):
+    def text(self, s, x, y, bold=False, pix=0, vertical=False, tid=None):
         pass
 
     def text_pixlen(self, s):
@@ -318,7 +331,7 @@ class Drawing(object):
     def close(self):
         pass
 
-    def link(self, x, y, name, url):
+    def link(self, x, y, name, url, lid=None):
         pass
 
 class SVG(Drawing):
@@ -354,9 +367,10 @@ class SVG(Drawing):
         print '<text %s style="%s" x="%d" y="%d" fill="%s">%s</text>' %\
               (ids, style, x, y, self.color, s)
 
-    def link(self, x, y, name, url):
-        print '<a xlink:href="%s">' % url
-        self.text(name, x, y)
+    def link(self, x, y, name, url, lid=None):
+        print '<a xlink:href="%s" target="_blank">' % url
+        tid = "t" + lid
+        self.text(name, x, y, tid=tid)
         print '</a>'
 
     def text_pixlen(self, s, pix=pix_per_char):
@@ -492,15 +506,15 @@ class Milestone(object):
     named_stroke_width = 3
     line_width = 8
     text_margin = 5
-    def __init__(self, month=None, name=None, duck=None):
+    def __init__(self, month=None, name=None, rfc=None):
         self.name = name
         self.mno = mno_from_mo(month)
         self.yno = yno_from_mo(month)
         self.x = None
         self.y = None
         self.color = None
-        print >> sys.stderr, "GOT MY DUCK"
-        self.DUCKUrl = duck
+        print >> sys.stderr, "GOT MY RFC"
+        self.RFCUrl = rfc
         self.PhabTicket = None
 
     # For sorting: Make a number that includes year and then month
@@ -553,7 +567,7 @@ class Milestone(object):
             ry = y - pix
             idn = dr.get_idn()
             linecount = 1
-            if self.DUCKUrl:
+            if self.RFCUrl:
                 linecount += 1
 
             dr.rect(rx + SVG.shadow_offset, ry + SVG.shadow_offset,
@@ -563,8 +577,8 @@ class Milestone(object):
                     text_background, idn="rect_" + str(idn))
 
             dr.text(self.name, x, y, tid="text_%d" % idn)
-            if self.DUCKUrl:
-                dr.link(x, y + 1.5 * pix, "DUCK", self.DUCKUrl)
+            if self.RFCUrl:
+                dr.link(x, y + 1.5 * pix, "(RFC)", self.RFCUrl, lid="link_%d" % idn)
 
     def connect(self, other, dr):
         if other:
@@ -610,15 +624,15 @@ def main():
                     name = k
                     body = division["Milestones"][name]
                     date = None
-                    duck = None
+                    rfc = None
                     try:
                         date = body["Date"]
                     except:
                         date = body
                     try:
-                        duck = body["Duck"]
+                        rfc = body["RFC"]
                     except:pass
-                    div.add_milestone(Milestone(date, name, duck=duck))
+                    div.add_milestone(Milestone(date, name, rfc=rfc))
         except Exception, e:
             print >> sys.stderr, "%s: " % rmf, e
 
