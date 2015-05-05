@@ -107,7 +107,8 @@ function setElemEnhance(elem, enhance) {
 }
 function listenElem(elem, telem, tlelem, evt) {
     enhance = isElemEnhanced(elem);
-    if (evt.toElement == elem || evt.toElement == telem || evt.toElement == tlelem) {
+    if (evt.toElement == elem || evt.toElement == telem ||
+       (tlelem != null && evt.toElement == tlelem)) {
         if (!enhance) {
             setElemEnhance(elem, true);
             fireIn(elem);
@@ -210,7 +211,6 @@ class Month(object):
 
 class GraphInfo(object):
     def __init__(self):
-        self.ms_per_mo = None
         self.months = []
         self.bottom = 0
         self.top = 0
@@ -218,7 +218,6 @@ class GraphInfo(object):
         self.height = 0
         self.mo_height = 0
         self.ms_margin = Division.pix_per_name / float(2)
-        self.ms_vspace = 0
         self.left = 0
 
 def mo_to_quarter(mo):
@@ -251,7 +250,7 @@ def calc_graph_info(divs, dr):
     # Find first and last months and the counts per month
     e_month = 13
     l_month = 0
-    m = []
+    mheight = []
     for d in divs:
         c = {}
         for ms in d.mss:
@@ -259,10 +258,10 @@ def calc_graph_info(divs, dr):
                 e_month = ms.mno
             if ms.yno == l_year and ms.mno > l_month:
                 l_month = ms.mno
-            c[(ms.yno, ms.mno)] = c.get((ms.yno, ms.mno), 0) + 1
-        m.append(max(c.values()))
+            c[(ms.yno, ms.mno)] = c.get((ms.yno, ms.mno), 0) + ms.height()
+        mheight.append(max(c.values()))
 
-    gi.ms_per_mo = max(m)
+    gi.mo_height = max(mheight)
 
     # Convert to first month of the quarter
     quarter = mo_to_quarter(e_month)
@@ -285,8 +284,6 @@ def calc_graph_info(divs, dr):
     bottom_offset = 2 * Milestone.named_radius + doc_margin
     top_offset = Milestone.named_radius
 
-    gi.ms_vspace = (gi.ms_margin * 2 + Milestone.named_radius * 2)
-    gi.mo_height = gi.ms_per_mo * gi.ms_vspace
     gi.height = len(gi.months) * gi.mo_height + bottom_offset + top_offset
     gi.bottom = gi.height - bottom_offset
     gi.top = Milestone.named_radius
@@ -466,16 +463,18 @@ class Division(object):
         # Draw the milestones in their month locations
         for m in gi.months:
             thismoms = []
+            this_vspace = 0
             for ms in self.mss:
                 if m.mo == ms.mno and m.yr == ms.yno:
                     thismoms.append(ms)
+                    this_vspace += ms.height()
 
             # y for the milestone is the top milestone in this month
-            msy = y - (gi.ms_per_mo - 1) * gi.ms_vspace + (len(thismoms) - 1) * gi.ms_vspace
+            msy = y - gi.mo_height + this_vspace
             for ms in thismoms:
                     ms.sety(msy)
                     # Next milestone in this month will be one slot down
-                    msy -= gi.ms_vspace
+                    msy -= ms.height()
 
             y -= gi.mo_height
 
@@ -520,6 +519,14 @@ class Milestone(object):
     # For sorting: Make a number that includes year and then month
     def key(self):
         return self.yno * 100 + self.mno
+
+    def height(self):
+        linecount = 1
+        if self.RFCUrl:
+            linecount += 1
+        pix = SVG.pix_per_char
+        ms_margin = Division.pix_per_name / float(2)
+        return (ms_margin * 2 + linecount * pix * 1.5)
 
     def setx(self, x):
         self.x = x
