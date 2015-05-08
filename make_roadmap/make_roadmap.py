@@ -35,14 +35,19 @@ function fixBoxLength(tElem, rElem, sElem) {
     rElem.setAttribute("width", len);
     sElem.setAttribute("width", len);
 }
-function enhanceText(elem) {
+function enhanceText(elem, ymove) {
     bigtsize = tsize + tgrowth;
     fstring = font + bigtsize + "px;";
     elem.setAttribute("style", fstring);
+
+    y = Number(elem.getAttribute("y"));
+    elem.setAttribute("origY", y);
+    elem.setAttribute("y", y + ymove);
 }
 function dehanceText(elem) {
     fstring = font + tsize + "px;";
     elem.setAttribute("style", fstring);
+    elem.setAttribute("y", elem.getAttribute("origY"));
 }
 function enhanceRect(elem) {
     x = Number(elem.getAttribute("x"));
@@ -71,11 +76,11 @@ function fireIn(elem) {
     enhanceRect(shad);
 
     text = document.getElementById(elem.getAttribute("text"));
-    enhanceText(text);
+    enhanceText(text, 1);
 
     tlink = document.getElementById(elem.getAttribute("tlink"));
     if (tlink) {
-        enhanceText(tlink);
+        enhanceText(tlink, vgrowth);
     }
 
     fixBoxLength(text, elem, shad);
