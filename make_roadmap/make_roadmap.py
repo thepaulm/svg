@@ -148,6 +148,10 @@ function registerElem(elemName) {
     elem.addEventListener('mouseout', f, false);
     telem.addEventListener('mouseover', f, false);
     telem.addEventListener('mouseout', f, false);
+    if (tlelem != null) {
+        tlelem.addEventListener('mouseover', f, false);
+        tlelem.addEventListener('mouseout', f, false);
+    }
 
     fixBoxLength(telem, elem, selem);
 }
