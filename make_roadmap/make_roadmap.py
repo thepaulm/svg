@@ -471,10 +471,12 @@ class Division(object):
 
             # y for the milestone is the top milestone in this month
             msy = y - gi.mo_height + this_vspace
+            first = True
             for ms in thismoms:
-                    ms.sety(msy)
-                    # Next milestone in this month will be one slot down
+                if not first:
                     msy -= ms.height()
+                first = False
+                ms.sety(msy)
 
             y -= gi.mo_height
 
