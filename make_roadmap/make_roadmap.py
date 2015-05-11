@@ -263,13 +263,19 @@ def calc_graph_info(divs, dr):
     for d in divs:
         c = {}
         for ms in d.mss:
+            # Find the first and last month, year
             if ms.yno == e_year and ms.mno < e_month:
                 e_month = ms.mno
             if ms.yno == l_year and ms.mno > l_month:
                 l_month = ms.mno
+
+            # Add up heights
             c[(ms.yno, ms.mno)] = c.get((ms.yno, ms.mno), 0) + ms.height()
+
+        # Add our max height to the max heights
         mheight.append(max(c.values()))
 
+    # The total height is the max of the maxs
     gi.mo_height = max(mheight)
 
     # Convert to first month of the quarter
@@ -467,24 +473,24 @@ class Division(object):
 
         self.mss.sort(key = lambda ms: ms.key())
 
-        y = gi.bottom - gi.ms_margin - Milestone.named_radius
+        y = gi.bottom
 
         # Draw the milestones in their month locations
         for m in gi.months:
             thismoms = []
             this_vspace = 0
             for ms in self.mss:
+                # If this is the month and year in consideration
                 if m.mo == ms.mno and m.yr == ms.yno:
+                    # Add to the group and increment the total height
                     thismoms.append(ms)
                     this_vspace += ms.height()
 
             # y for the milestone is the top milestone in this month
-            msy = y - gi.mo_height + this_vspace
-            first = True
+            ms_margin = Division.pix_per_name / float(2)
+            msy = y - gi.mo_height + this_vspace + Milestone.named_radius / float(2)  + ms_margin
             for ms in thismoms:
-                if not first:
-                    msy -= ms.height()
-                first = False
+                msy -= ms.height()
                 ms.sety(msy)
 
             y -= gi.mo_height

@@ -4,28 +4,22 @@
     {
         "name" : "First Division",
         "Milestones" : {
-            "First thing of new year" : "March 2015",
-            "Last thing of last year" : "December 2014"
+            "Thing1" : "Jan 2015",
+            "Thing2" : "Feb 2015",
+            "Thing3" : "March 2015",
+
+            "thing4" : {
+                "Date" : "April 2015",
+                "RFC" : "http://www.foo.bar"
+            },
+            "Thing5" : "May 2015",
+            "Thing6" : "June 2015",
+
+            "Thing7" : "July 2015",
+            "thing8" : "Aug 2015",
+            "thing9" : "Sept 2015"
         },
         "color" : "red"
-    },
-    {
-        "name" : "Second Division",
-        "Milestones" : {
-            "Make progress" : "March 2015",
-            "Birthday!" : "March 2015",
-            "More" : "April 2015",
-            "Out of order elem" : "January 2015"
-        },
-        "color" : "blue"
-    },
-    {
-        "name" : "omu umu",
-        "Milestones" : {
-            "start off year" : "Jan 2015",
-            "thing" : "June 2015"
-        },
-        "color" : "green"
     }
     ]
 }
